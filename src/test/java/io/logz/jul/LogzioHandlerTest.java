@@ -59,8 +59,8 @@ public class LogzioHandlerTest {
 		int drainTimeout = 1;
 		String message1 = "Just a log - " + random(5);
 		Map<String, String> additionalFields = new HashMap<>();
-		String additionalFieldsString = "java_home=$JAVA_HOME;testing=yes;message=override";
-		additionalFields.put("java_home", System.getenv("JAVA_HOME"));
+		String additionalFieldsString = "username=$USERNAME;testing=yes;message=override";
+		additionalFields.put("username", System.getenv("USERNAME"));
 		additionalFields.put("testing", "yes");
 
 		Logger testLogger = createLogger(token, type, loggerName, drainTimeout, false, additionalFieldsString);
@@ -128,13 +128,13 @@ public class LogzioHandlerTest {
 
 	@Test
 	public void testTokenAndLogzioUrlFromSystemEnvironment() {
-		String token = System.getenv("JAVA_HOME");
+		String token = System.getenv("USERNAME");
 		String type = "testType";
 		String loggerName = "testLogger";
 		int drainTimeout = 1;
 		String message1 = "Just a log - " + random(5);
 
-		Logger testLogger = createLogger("$JAVA_HOME", type, loggerName, drainTimeout, false, null);
+		Logger testLogger = createLogger("$USERNAME", type, loggerName, drainTimeout, false, null);
 		testLogger.info(message1);
 
 		sleepSeconds(2 * drainTimeout);
@@ -146,7 +146,7 @@ public class LogzioHandlerTest {
 
 	private Logger createLogger(String token, String type, String loggerName, Integer drainTimeout,
 			boolean addHostname, String additionalFields) {
-		logger.log(Level.INFO, "Creating logger {}. token={}, type={}, drainTimeout={}, addHostname={}, additionalFields={}",
+		logger.log(Level.INFO, "Creating logger {0}. token={1}, type={2}, drainTimeout={3}, addHostname={4}, additionalFields={5}",
 				new Object[] { loggerName, token, type, drainTimeout, addHostname, additionalFields });
 		Logger logger = Logger.getLogger(loggerName);
 		String url = "http://" + mockListener.getHost() + ":" + mockListener.getPort();
@@ -160,14 +160,14 @@ public class LogzioHandlerTest {
 		additionalFields.forEach((field, value) -> {
 			String fieldValueInLog = logRequest.getStringFieldOrNull(field);
 			assertThat(fieldValueInLog)
-					.describedAs("Field '{}' in Log [{}]", field, logRequest.getJsonObject().toString())
+					.describedAs("Field '%s' in Log [%s]", field, logRequest.getJsonObject().toString())
 					.isNotNull()
 					.isEqualTo(value);
 		});
 	}
 
 	private void sleepSeconds(int seconds) {
-		logger.info("Sleeping " + seconds + " [sec]...");
+		logger.log(Level.INFO, "Sleeping {0} [sec]...", seconds);
 		try {
 			Thread.sleep(seconds * 1000);
 		} catch (InterruptedException e) {
