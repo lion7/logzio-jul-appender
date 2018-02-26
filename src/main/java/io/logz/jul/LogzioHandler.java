@@ -34,6 +34,8 @@ public class LogzioHandler extends Handler {
     private static ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
     private LogzioSender logzioSender;
+    private ScheduledExecutorService tasksExecutor;
+    private LogEnhancer enhancer;
 
     private final String logzioToken;
     private final String logzioType;
@@ -48,8 +50,6 @@ public class LogzioHandler extends Handler {
     private final int gcPersistedQueueFilesIntervalSeconds;
 
     private final Map<String, String> additionalFieldsMap = new HashMap<>();
-
-    private ScheduledExecutorService tasksExecutor;
 
     private static String getStringProperty(String name) {
         return LogManager.getLogManager().getProperty(LogzioHandler.class.getName() + "." + name);
@@ -90,6 +90,22 @@ public class LogzioHandler extends Handler {
         return defaultValue;
     }
 
+    private static LogEnhancer getEnhancerProperty(String name, LogEnhancer defaultValue) {
+        String val = getStringProperty(name);
+        try {
+            if (val != null) {
+                Class<?> clz = ClassLoader.getSystemClassLoader().loadClass(val);
+                return (LogEnhancer) clz.newInstance();
+            }
+        } catch (Exception ex) {
+            // We got one of a variety of exceptions in creating the
+            // class or creating an instance.
+            // Drop through.
+        }
+        // We got an exception.  Return the defaultValue.
+        return defaultValue;
+    }
+
     public LogzioHandler() {
         this(
                 getStringProperty("url"),
@@ -107,6 +123,7 @@ public class LogzioHandler extends Handler {
         );
         setLevel(getLevelProperty("level", Level.INFO));
         setFilter(getFilterProperty("filter", null));
+        setEnhancer(getEnhancerProperty("enhancer", null));
         try {
             setEncoding(getStringProperty("encoding"));
         } catch (Exception ex) {
@@ -207,6 +224,14 @@ public class LogzioHandler extends Handler {
         }
     }
 
+    public LogEnhancer getEnhancer() {
+        return enhancer;
+    }
+
+    public void setEnhancer(LogEnhancer enhancer) {
+        this.enhancer = enhancer;
+    }
+
     @Override
     public void flush() {
         logzioSender.drainQueueAndSend();
@@ -231,17 +256,17 @@ public class LogzioHandler extends Handler {
         }
     }
 
-    private JsonObject formatMessageAsJson(LogRecord loggingEvent) {
-        String threadName = threadMXBean.getThreadInfo(loggingEvent.getThreadID()).getThreadName();
+    private JsonObject formatMessageAsJson(LogRecord record) {
+        String threadName = threadMXBean.getThreadInfo(record.getThreadID()).getThreadName();
 
         JsonObject logMessage = new JsonObject();
 
-        logMessage.addProperty(TIMESTAMP, new Date(loggingEvent.getMillis()).toInstant().toString());
-        logMessage.addProperty(LOGLEVEL, loggingEvent.getLevel().toString());
-        logMessage.addProperty(MESSAGE, loggingEvent.getMessage());
-        logMessage.addProperty(LOGGER, loggingEvent.getLoggerName());
+        logMessage.addProperty(TIMESTAMP, new Date(record.getMillis()).toInstant().toString());
+        logMessage.addProperty(LOGLEVEL, record.getLevel().toString());
+        logMessage.addProperty(MESSAGE, record.getMessage());
+        logMessage.addProperty(LOGGER, record.getLoggerName());
         logMessage.addProperty(THREAD, threadName);
-        Throwable throwable = loggingEvent.getThrown();
+        Throwable throwable = record.getThrown();
         if (throwable != null) {
             logMessage.addProperty(EXCEPTION, Throwables.getStackTraceAsString(throwable));
         }
@@ -249,6 +274,11 @@ public class LogzioHandler extends Handler {
         if (additionalFieldsMap != null) {
             additionalFieldsMap.forEach(logMessage::addProperty);
         }
+
+        if (enhancer != null) {
+            enhancer.enhance(logMessage);
+        }
+
         return logMessage;
     }
 
