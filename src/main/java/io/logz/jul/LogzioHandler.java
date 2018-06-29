@@ -133,7 +133,7 @@ public class LogzioHandler extends Handler {
                 // doing a setEncoding with null should always work.
                 // assert false;
             }
-        }
+         }
     }
 
     public LogzioHandler(String token) {
@@ -144,7 +144,11 @@ public class LogzioHandler extends Handler {
         this(url, token, null, null, null, null, null, null, null, null, null, null);
     }
 
-    LogzioHandler(String url, String token, String type, Integer drainTimeoutSec,
+    public LogzioHandler(String url, String token, String type) {
+        this(url, token, type, null, null, null, null, null, null, null, null, null);
+    }
+
+    public LogzioHandler(String url, String token, String type, Integer drainTimeoutSec,
                   Integer fileSystemFullPercentThreshold, String bufferDir, Integer socketTimeout,
                   Integer connectTimeout, Boolean addHostname, String additionalFields,
                   Boolean debug, Integer gcPersistedQueueFilesIntervalSeconds) {

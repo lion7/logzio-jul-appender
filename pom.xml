@@ -6,7 +6,7 @@
 
     <groupId>nl.leeuwit.logzio</groupId>
     <artifactId>logzio-jul-appender</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
 
     <packaging>jar</packaging>
     <name>Logz.io Java Util Logging Appender</name>
@@ -38,6 +38,13 @@
     <properties>
         <logzio-sender-version>1.0.7</logzio-sender-version>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>typewriter</id>
+            <url>http://typewriter.nl:8083/repository/maven-releases</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>
@@ -94,7 +101,6 @@
                     </execution>
                 </executions>
             </plugin>
-			-->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -106,6 +112,7 @@
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
+			-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
