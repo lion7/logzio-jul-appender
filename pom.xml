@@ -6,7 +6,7 @@
 
     <groupId>nl.leeuwit.logzio</groupId>
     <artifactId>logzio-jul-appender</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>Logz.io Java Util Logging Appender</name>
